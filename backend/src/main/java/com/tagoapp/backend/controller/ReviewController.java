@@ -38,6 +38,14 @@ public class ReviewController {
     // Get all reviews
     @GetMapping
     public List<Review> getAllReviews() {
+        // TODO : 遅延時間テスト用、本番では削除。
+        try {
+            // レスポンスを2秒間（2000ミリ秒）意図的に遅延させる
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            // スレッドの割り込み例外が発生した場合の処理
+            e.printStackTrace();
+        }
         return reviewRepository.findAll();
     }
 
