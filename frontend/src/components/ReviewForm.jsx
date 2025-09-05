@@ -13,6 +13,11 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
   const [rating, setRating] = useState("");
   const [comment, setComment] = useState("");
   const [visitedDate, setVisitedDate] = useState("");
+  const [quality, setQuality] = useState("");
+  const [scenery, setScenery] = useState("");
+  const [cleanliness, setCleanliness] = useState("");
+  const [service, setService] = useState("");
+  const [meal, setMeal] = useState("");
 
   // initialData（編集対象データ）が変更されたら、フォームの内容を更新する
   useEffect(() => {
@@ -21,11 +26,21 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
       setRating(initialData.rating);
       setComment(initialData.comment || "");
       setVisitedDate(initialData.visited_date || "");
+      setQuality(initialData.quality || "");
+      setScenery(initialData.scenery || "");
+      setCleanliness(initialData.cleanliness || "");
+      setService(initialData.service || "");
+      setMeal(initialData.meal || "");
     } else {
       setName("");
       setRating("");
       setComment("");
       setVisitedDate("");
+      setQuality("");
+      setScenery("");
+      setCleanliness("");
+      setService("");
+      setMeal("");
     }
   }, [initialData]);
 
@@ -40,6 +55,11 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
       rating: parseFloat(rating),
       comment: comment,
       visited_date: visitedDate || null,
+      quality: parseFloat(quality) || null,
+      scenery: parseFloat(scenery) || null,
+      cleanliness: parseFloat(cleanliness) || null,
+      service: parseFloat(service) || null,
+      meal: parseFloat(meal) || null,
     };
     onFormSubmit(reviewData);
   };
@@ -120,6 +140,80 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
             キャンセル
           </button>
         )}
+      </div>
+      <h3 className="text-lg font-bold mt-6 mb-2 text-gray-700">詳細評価</h3>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+        {/* 以下、各評価項目の入力欄 (例: お湯の質) */}
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            お湯の質
+          </label>
+          <input
+            type="number"
+            step="0.5"
+            min="0"
+            max="5"
+            value={quality}
+            onChange={(e) => setQuality(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3"
+          />
+        </div>
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            景色
+          </label>
+          <input
+            type="number"
+            step="0.5"
+            min="0"
+            max="5"
+            value={scenery}
+            onChange={(e) => setScenery(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3"
+          />
+        </div>
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            清潔さ
+          </label>
+          <input
+            type="number"
+            step="0.5"
+            min="0"
+            max="5"
+            value={cleanliness}
+            onChange={(e) => setCleanliness(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3"
+          />
+        </div>
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            サービス
+          </label>
+          <input
+            type="number"
+            step="0.5"
+            min="0"
+            max="5"
+            value={service}
+            onChange={(e) => setService(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3"
+          />
+        </div>
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            食事
+          </label>
+          <input
+            type="number"
+            step="0.5"
+            min="0"
+            max="5"
+            value={meal}
+            onChange={(e) => setMeal(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3"
+          />
+        </div>
       </div>
     </form>
   );
