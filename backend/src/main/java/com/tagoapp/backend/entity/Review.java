@@ -43,4 +43,19 @@ public class Review {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+
+    @Column(precision = 2, scale = 1)
+    private BigDecimal quality; // お湯の質
+
+    @Column(precision = 2, scale = 1)
+    private BigDecimal scenery; // 景色
+
+    @Column(precision = 2, scale = 1)
+    private BigDecimal cleanliness; // 清潔さ
+
+    @Column(precision = 2, scale = 1)
+    private BigDecimal service; // サービス
+
+    @Column(precision = 2, scale = 1)
+    private BigDecimal meal; // 食事
 }
