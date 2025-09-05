@@ -1,0 +1,4 @@
+/* Tailwind CSSの基本的なスタイル、コンポーネント、ユーティリティを読み込む */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
