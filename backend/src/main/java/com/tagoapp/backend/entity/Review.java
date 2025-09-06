@@ -58,4 +58,7 @@ public class Review {
 
     @Column(precision = 2, scale = 1)
     private BigDecimal meal; // 食事
+
+    @Column(name = "image_url")
+    private String imageUrl;
 }
