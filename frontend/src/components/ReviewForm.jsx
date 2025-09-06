@@ -17,7 +17,9 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
   const [scenery, setScenery] = useState("");
   const [cleanliness, setCleanliness] = useState("");
   const [service, setService] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [meal, setMeal] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // 送信中の状態を管理
 
   // initialData（編集対象データ）が変更されたら、フォームの内容を更新する
   useEffect(() => {
@@ -31,6 +33,7 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
       setCleanliness(initialData.cleanliness || "");
       setService(initialData.service || "");
       setMeal(initialData.meal || "");
+      setImageFile(null); // 編集開始時は画像選択をリセット
     } else {
       setName("");
       setRating("");
@@ -41,14 +44,47 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
       setCleanliness("");
       setService("");
       setMeal("");
+      setImageFile(null);
     }
   }, [initialData]);
 
   /**
    * フォームの送信ボタンが押されたときの処理
    */
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setIsSubmitting(true); // 送信開始
+
+    let imageUrl = initialData ? initialData.image_url : null;
+
+    // ★ 2. 新しい画像ファイルが選択されている場合のみアップロード処理を実行
+    if (imageFile) {
+      try {
+        // --- Step A: バックエンドにSAS URLをリクエスト ---
+        const sasResponse = await fetch('http://localhost:8080/api/storage/generate-upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: imageFile.name }),
+        });
+        if (!sasResponse.ok) throw new Error('SAS URLの取得に失敗しました。');
+        const { sasUrl, blobUrl } = await sasResponse.json();
+        imageUrl = blobUrl; // DBに保存する最終的なURLをセット
+
+        // --- Step B: 取得したSAS URLに画像を直接アップロード ---
+        const uploadResponse = await fetch(sasUrl, {
+          method: 'PUT',
+          headers: { 'x-ms-blob-type': 'BlockBlob', 'Content-Type': imageFile.type },
+          body: imageFile,
+        });
+        if (!uploadResponse.ok) throw new Error('Azureへの画像アップロードに失敗しました。');
+
+      } catch (error) {
+        console.error(error);
+        alert(error.message);
+        setIsSubmitting(false); // エラー時は送信状態を解除
+        return;
+      }
+    }
     const reviewData = {
       id: initialData ? initialData.id : undefined,
       name: name,
@@ -60,8 +96,10 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
       cleanliness: parseFloat(cleanliness) || null,
       service: parseFloat(service) || null,
       meal: parseFloat(meal) || null,
+      image_url: imageUrl, // 画像URLを追加
     };
     onFormSubmit(reviewData);
+    setIsSubmitting(false);
   };
 
   return (
@@ -214,6 +252,24 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
             className="shadow appearance-none border rounded w-full py-2 px-3"
           />
         </div>
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-700 text-sm font-bold mb-2">
+          温泉の写真：
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setImageFile(e.target.files[0])}
+          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        />
+      </div>
+
+      <div className="flex items-center gap-x-4">
+        <button type="submit" disabled={isSubmitting} className="...">
+          {isSubmitting ? '送信中...' : (initialData ? "更新" : "登録")}
+        </button>
+        {/* ... (キャンセルボタンは変更なし) ... */}
       </div>
     </form>
   );

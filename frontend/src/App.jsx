@@ -132,8 +132,13 @@ function App() {
                     <h3 className="text-xl font-bold text-gray-800 mb-2">
                       {review.name}
                     </h3>
-
-                    {/* ★ 2. review.qualityが存在する場合のみチャートを表示 */}
+                    {review.image_url ? (
+                      <img src={review.image_url} alt={review.name} className="w-full h-48 object-cover" />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-400">画像なし</span>
+                      </div>
+                    )}
                     {review.quality != null ? (
                       <div className="w-full h-64 mb-4">
                         <RadarChart reviewData={review} />
