@@ -12,17 +12,11 @@ const request = async (endpoint, options = {}) => {
   try {
     const response = await fetch(url, options);
     if (!response.ok) {
-      // 204 No Contentの場合は成功として扱う
-      if (response.status === 204) {
-        return null;
-      }
-      const errorData = await response.json().catch(() => ({})); // JSONパース失敗も考慮
+      if (response.status === 204) return null;
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
-    // レスポンスボディがない場合 (204など)
-    if (response.status === 204) {
-        return null;
-    }
+    if (response.status === 204) return null;
     return response.json();
   } catch (error) {
     console.error(`API request failed: ${error.message}`);
@@ -74,20 +68,18 @@ export const deleteReview = (id) => {
 
 /**
  * 画像をAzure Blob Storageにアップロードする
- * @param {File} imageFile - アップロードする画像ファイル
- * @returns {Promise<string>} - アップロードされた画像のURL
+ * @param {File | null} imageFile - アップロードする画像ファイル
+ * @returns {Promise<string | null>} - アップロードされた画像のURL
  */
 export const uploadImage = async (imageFile) => {
   if (!imageFile) return null;
 
-  // Step 1: バックエンドにSAS URLをリクエスト
   const { sasUrl, blobUrl } = await request('/storage/generate-upload-url', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fileName: imageFile.name }),
   });
 
-  // Step 2: 取得したSAS URLに画像を直接アップロード
   const uploadResponse = await fetch(sasUrl, {
     method: 'PUT',
     headers: { 'x-ms-blob-type': 'BlockBlob', 'Content-Type': imageFile.type },
@@ -98,5 +90,5 @@ export const uploadImage = async (imageFile) => {
     throw new Error('Azureへの画像アップロードに失敗しました。');
   }
 
-  return blobUrl; // DBに保存する最終的なURLを返す
+  return blobUrl;
 };
