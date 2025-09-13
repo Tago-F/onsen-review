@@ -65,17 +65,6 @@ function RadarChart({ reviewData }) {
         },
       },
     },
-    // アニメーションの設定
-    // animation: {
-    //   // グラフが中心から広がるようなアニメーション
-    //   tension: {
-    //     duration: 1000,
-    //     easing: "easeOutQuad",
-    //     from: 0.2,
-    //     to: 1,
-    //     loop: false,
-    //   },
-    // },
 
     // レスポンシブ対応
     maintainAspectRatio: false,
