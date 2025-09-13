@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### ローカル用設定ファイル ###
+/backend/src/main/resources/application-dev.properties
