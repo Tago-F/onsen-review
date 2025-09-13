@@ -28,28 +28,17 @@ public class ReviewController {
 
     private final ReviewRepository reviewRepository;
 
-    // Create a new review
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Review createReview(@RequestBody Review review) {
         return reviewRepository.save(review);
     }
 
-    // Get all reviews
     @GetMapping
     public List<Review> getAllReviews() {
-        // TODO : 遅延時間テスト用、本番では削除。
-        try {
-            // レスポンスを2秒間（2000ミリ秒）意図的に遅延させる
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // スレッドの割り込み例外が発生した場合の処理
-            e.printStackTrace();
-        }
         return reviewRepository.findAll();
     }
 
-    // Get a single review by ID
     @GetMapping("/{id}")
     public Review getReviewById(@PathVariable Long id) {
         return reviewRepository.findById(id)
@@ -57,22 +46,33 @@ public class ReviewController {
                         () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found with id: " + id));
     }
 
-    // Update an existing review
+    // ★★★ UPDATED METHOD ★★★
     @PutMapping("/{id}")
-    public Review updateReview(@PathVariable Long id, @RequestBody Review updatedReview) {
+    public Review updateReview(@PathVariable Long id, @RequestBody Review updatedReviewDetails) {
         return reviewRepository.findById(id)
-                .map(review -> {
-                    review.setName(updatedReview.getName());
-                    review.setRating(updatedReview.getRating());
-                    review.setComment(updatedReview.getComment());
-                    review.setVisitedDate(updatedReview.getVisitedDate());
-                    return reviewRepository.save(review);
+                .map(existingReview -> {
+                    // 基本情報
+                    existingReview.setName(updatedReviewDetails.getName());
+                    existingReview.setRating(updatedReviewDetails.getRating());
+                    existingReview.setComment(updatedReviewDetails.getComment());
+                    existingReview.setVisitedDate(updatedReviewDetails.getVisitedDate());
+
+                    // 詳細評価
+                    existingReview.setQuality(updatedReviewDetails.getQuality());
+                    existingReview.setScenery(updatedReviewDetails.getScenery());
+                    existingReview.setCleanliness(updatedReviewDetails.getCleanliness());
+                    existingReview.setService(updatedReviewDetails.getService());
+                    existingReview.setMeal(updatedReviewDetails.getMeal());
+
+                    // 画像URL
+                    existingReview.setImageUrl(updatedReviewDetails.getImageUrl());
+
+                    return reviewRepository.save(existingReview);
                 })
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found with id: " + id));
     }
 
-    // Delete a review
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteReview(@PathVariable Long id) {
