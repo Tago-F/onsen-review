@@ -4,6 +4,8 @@ import RadarChart from "./components/RadarChart"; // ★ 1. RadarChartコンポ�
 import "./App.css";
 
 function App() {
+  // 環境変数から API ベース URL を取得
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   // アプリケーションの主要な状態（state）を定義
   const [reviews, setReviews] = useState([]); // レビューのリスト
   const [editingReview, setEditingReview] = useState(null); // 現在編集中のレビューデータ
@@ -13,7 +15,7 @@ function App() {
   // 副作用（API通信など）を扱うためのフック
   useEffect(() => {
     // GETリクエストで全てのレビューを取得するAPIを呼び出す
-    fetch("http://localhost:8080/api/reviews")
+    fetch(`${API_BASE_URL}/reviews`)
       .then((response) => response.json())
       .then((data) => {
         setReviews(data); // 取得したデータでreviews stateを更新
@@ -35,7 +37,7 @@ function App() {
    * 新規レビューが投稿されたときの処理
    */
   const handleReviewAdded = (reviewData) => {
-    fetch("http://localhost:8080/api/reviews", {
+    fetch(`${API_BASE_URL}/reviews`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(reviewData),
@@ -52,7 +54,7 @@ function App() {
    * レビューが更新されたときの処理
    */
   const handleUpdate = (updatedReview) => {
-    fetch(`http://localhost:8080/api/reviews/${updatedReview.id}`, {
+    fetch(`${API_BASE_URL}/reviews/${updatedReview.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedReview),
@@ -73,7 +75,7 @@ function App() {
    * レビューが削除されたときの処理
    */
   const handleDelete = (idToDelete) => {
-    fetch(`http://localhost:8080/api/reviews/${idToDelete}`, {
+    fetch(`${API_BASE_URL}/reviews/${idToDelete}`, {
       method: "DELETE",
     })
       .then((response) => {
