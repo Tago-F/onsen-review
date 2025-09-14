@@ -24,7 +24,7 @@ jobs:
       # 3. バックエンドのビルド
       - name: Build Backend with Maven
         run: ./mvnw -f backend/pom.xml clean package
-        working-directory: ./tago-f/onsen-review/onsen-review-dev02
+        working-directory: ./tago-f/onsen-review/onsen-review-main
 
       # 4. Node.jsをセットアップ
       - name: Set up Node.js
@@ -37,7 +37,7 @@ jobs:
         run: |
           npm install
           npm run build
-        working-directory: ./tago-f/onsen-review/onsen-review-dev02/frontend
+        working-directory: ./tago-f/onsen-review/onsen-review-main/frontend
 
       # 6. ビルドしたファイルをサーバーにデプロイ
       - name: Deploy to Azure VM
@@ -53,10 +53,10 @@ jobs:
 
             # フロントエンドのファイルを削除してコピー
             sudo rm -rf /opt/onsen/dist/*
-            sudo cp -r tago-f/onsen-review/onsen-review-dev02/frontend/dist/* /opt/onsen/dist/
+            sudo cp -r tago-f/onsen-review/onsen-review-main/frontend/dist/* /opt/onsen/dist/
 
             # バックエンドのJARファイルをコピー
-            sudo cp tago-f/onsen-review/onsen-review-dev02/backend/target/*.jar /opt/onsen/server/backend-0.0.1-SNAPSHOT.jar
+            sudo cp tago-f/onsen-review/onsen-review-main/backend/target/*.jar /opt/onsen/server/backend-0.0.1-SNAPSHOT.jar
 
             # systemdでSpring Bootアプリを再起動
             sudo systemctl restart onsen.service
