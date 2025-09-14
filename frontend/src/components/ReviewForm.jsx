@@ -121,7 +121,6 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
             rating={formData.rating}
             onRatingChange={handleRatingChange}
           />
-          <input type="number" name="rating" step="0.5" min="1" max="5" value={formData.rating} onChange={handleChange} required className="shadow appearance-none border rounded w-full py-2 px-3" />
         </div>
       </div>
       <div className="mb-4">
