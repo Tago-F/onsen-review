@@ -65,14 +65,16 @@ jobs:
             sudo mkdir -p /opt/onsen/dist
             sudo mkdir -p /opt/onsen/server
 
+            # 一時ファイルの確認
+            ls -R /tmp/deploy_artifacts
+            tree /tmp/deploy_artifacts
+
             # フロントエンドのファイルを配置
-            # scp-actionはディレクトリ構造を保持するため、/tmp/deploy_artifacts/dist/* にファイルがあります
             sudo rm -rf /opt/onsen/dist/*
-            sudo cp -r /tmp/deploy_artifacts/dist/* /opt/onsen/dist/
+            sudo cp -r /tmp/deploy_artifacts/frontend/dist/* /opt/onsen/dist/
 
             # バックエンドのJARファイルを配置
-            # /tmp/deploy_artifacts/*.jar というパスにファイルがあります
-            sudo cp /tmp/deploy_artifacts/*.jar /opt/onsen/server/backend-0.0.1-SNAPSHOT.jar
+            sudo cp /tmp/deploy_artifacts/backend/target/*.jar /opt/onsen/server/backend-0.0.1-SNAPSHOT.jar
 
             # 一時ファイルをクリーンアップ
             sudo rm -rf /tmp/deploy_artifacts
