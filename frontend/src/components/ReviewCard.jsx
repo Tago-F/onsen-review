@@ -1,4 +1,18 @@
 import RadarChart from "./RadarChart.jsx";
+import { FaStar } from "react-icons/fa";
+
+const StarDisplay = ({ rating }) => (
+  <div className="flex items-center">
+    {[...Array(5)].map((_, index) => (
+      <FaStar
+        key={index}
+        color={index < rating ? "#ffc107" : "#e4e5e9"}
+        size={20}
+      />
+    ))}
+    <span className="ml-2 text-gray-600 font-bold">{rating.toFixed(1)}</span>
+  </div>
+);
 
 /**
  * 個々のレビュー情報を表示するカードコンポーネント
@@ -12,6 +26,7 @@ function ReviewCard({ review, onEdit, onDelete }) {
     <li className="bg-white shadow-md rounded-lg p-6 flex flex-col justify-between">
       <div>
         <h3 className="text-xl font-bold text-gray-800 mb-2">{review.name}</h3>
+        <StarDisplay rating={review.rating} />
         {review.image_url ? (
           <img
             src={review.image_url}

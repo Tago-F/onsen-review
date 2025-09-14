@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import StarRatingInput from "./StarRatingInput.jsx";
 
 /**
  * レビューの新規投稿と編集を担当するフォームコンポーネント
@@ -54,7 +55,14 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  
+
+  /**
+   * 星評価が変更されたときの処理
+   */
+  const handleRatingChange = (newRating) => {
+    setFormData((prev) => ({ ...prev, rating: newRating }));
+  };
+
   /**
    * 画像ファイルが選択されたときの処理
    */
@@ -77,21 +85,21 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
     numericFields.forEach(field => {
       processedData[field] = processedData[field] ? parseFloat(processedData[field]) : null;
     });
-    
+
     // 親コンポーネントにデータとファイルを渡す
     await onFormSubmit(processedData, imageFile);
-    
+
     // 新規投稿の場合、フォームをリセット
     if (!initialData) {
-        setFormData({
-            name: "", rating: "", comment: "", visited_date: "",
-            quality: "", scenery: "", cleanliness: "", service: "", meal: "",
-        });
-        setImageFile(null);
-        // input[type=file]の表示をリセットするためにフォーム自体をリセット
-        event.target.reset();
+      setFormData({
+        name: "", rating: "", comment: "", visited_date: "",
+        quality: "", scenery: "", cleanliness: "", service: "", meal: "",
+      });
+      setImageFile(null);
+      // input[type=file]の表示をリセットするためにフォーム自体をリセット
+      event.target.reset();
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -100,7 +108,7 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
         {initialData ? "レビューを編集" : "新しいレビューを投稿"}
       </h2>
-      
+
       {/* --- 基本情報 --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
@@ -109,6 +117,10 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
         </div>
         <div>
           <label className="block text-gray-700 text-sm font-bold mb-2">評価：</label>
+          <StarRatingInput
+            rating={formData.rating}
+            onRatingChange={handleRatingChange}
+          />
           <input type="number" name="rating" step="0.5" min="1" max="5" value={formData.rating} onChange={handleChange} required className="shadow appearance-none border rounded w-full py-2 px-3" />
         </div>
       </div>
@@ -145,7 +157,7 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
           <input type="number" name="meal" step="0.5" min="0" max="5" value={formData.meal} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3" />
         </div>
       </div>
-      
+
       {/* --- 画像アップロード --- */}
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">温泉の写真：</label>
