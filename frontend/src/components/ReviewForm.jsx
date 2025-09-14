@@ -22,6 +22,7 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
   });
   const [imageFile, setImageFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
   // initialDataが変更されたらフォームの内容を更新
   useEffect(() => {
@@ -77,6 +78,19 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
     event.preventDefault();
     if (isSubmitting) return;
 
+    // 入力の空白チェック
+    if (!formData.rating) {
+      errors.rating = "評価を選択してください。";
+    }
+    if (!formData.name) {
+      errors.name = "場所の名前を入力してください。";
+    }
+    setFormErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     // 数値に変換するフィールド
@@ -121,6 +135,9 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
             rating={formData.rating}
             onRatingChange={handleRatingChange}
           />
+          {formErrors.rating && (
+            <p className="text-red-500 text-xs italic mt-1">{formErrors.rating}</p>
+          )}
         </div>
       </div>
       <div className="mb-4">
