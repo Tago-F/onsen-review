@@ -3,16 +3,20 @@ name: Deploy Onsen Review App
 on:
   push:
     branches:
-      - main # mainブランチにプッシュされたときに実行
+      - main
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest # ワークフローを実行する環境
+    runs-on: ubuntu-latest
 
     steps:
       # 1. リポジトリのコードをチェックアウト
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # デバッグ
+      - name: List files in the repository
+        run: ls -R
 
       # 2. JDK 17をセットアップ
       - name: Set up JDK 17
@@ -39,40 +43,39 @@ jobs:
           npm run build
         working-directory: ./frontend
 
-      # 6.フロントエンドのビルド成果物をサーバーに転送
-      - name: SCP Frontend files to server
+      # 6. ビルドしたファイルをサーバーにコピー
+      - name: Copy build artifacts to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "frontend/dist/" # 送信元
-          target: "/tmp/"         # 送信先（一時的な場所）
-          
-      # 7.バックエンドのJARファイルをサーバーに転送
-      - name: SCP Backend JAR to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "backend/target/*.jar"
-          target: "/tmp/"
-          strip_components: 2 # backend/target/ の部分をパスから除去
+          source: "frontend/dist,backend/target/*.jar"
+          target: "/tmp/deploy_artifacts"
 
-      # 8.サーバー上でデプロイと再起動を実行
-      - name: Deploy and Restart on Server
+      # 7. サーバー上でデプロイと再起動を実行
+      - name: Deploy and restart services
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 古いフロントエンドファイルを削除
+            # 展開先のディレクトリを作成
+            sudo mkdir -p /opt/onsen/dist
+            sudo mkdir -p /opt/onsen/server
+
+            # フロントエンドのファイルを配置
+            # scp-actionはディレクトリ構造を保持するため、/tmp/deploy_artifacts/dist/* にファイルがあります
             sudo rm -rf /opt/onsen/dist/*
-            # 一時的な場所から正式な場所にファイルを移動
-            sudo mv /tmp/dist/* /opt/onsen/dist/
-            sudo mv /tmp/*.jar /opt/onsen/server/backend-0.0.1-SNAPSHOT.jar
+            sudo cp -r /tmp/deploy_artifacts/dist/* /opt/onsen/dist/
+
+            # バックエンドのJARファイルを配置
+            # /tmp/deploy_artifacts/*.jar というパスにファイルがあります
+            sudo cp /tmp/deploy_artifacts/*.jar /opt/onsen/server/backend-0.0.1-SNAPSHOT.jar
+
+            # 一時ファイルをクリーンアップ
+            sudo rm -rf /tmp/deploy_artifacts
 
             # アプリケーションを再起動
             sudo systemctl restart onsen.service
