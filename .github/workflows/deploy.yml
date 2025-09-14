@@ -1,0 +1,65 @@
+name: Deploy Onsen Review App
+
+on:
+  push:
+    branches:
+      - main # mainブランチにプッシュされたときに実行
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # ワークフローを実行する環境
+
+    steps:
+      # 1. リポジトリのコードをチェックアウト
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. JDK 17をセットアップ
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. バックエンドのビルド
+      - name: Build Backend with Maven
+        run: ./mvnw -f backend/pom.xml clean package
+        working-directory: ./tago-f/onsen-review/onsen-review-dev02
+
+      # 4. Node.jsをセットアップ
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 5. フロントエンドのビルド
+      - name: Build Frontend
+        run: |
+          npm install
+          npm run build
+        working-directory: ./tago-f/onsen-review/onsen-review-dev02/frontend
+
+      # 6. ビルドしたファイルをサーバーにデプロイ
+      - name: Deploy to Azure VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # 必要なディレクトリが存在しない場合は作成
+            sudo mkdir -p /opt/onsen/dist
+            sudo mkdir -p /opt/onsen/server
+
+            # フロントエンドのファイルを削除してコピー
+            sudo rm -rf /opt/onsen/dist/*
+            sudo cp -r tago-f/onsen-review/onsen-review-dev02/frontend/dist/* /opt/onsen/dist/
+
+            # バックエンドのJARファイルをコピー
+            sudo cp tago-f/onsen-review/onsen-review-dev02/backend/target/*.jar /opt/onsen/server/backend-0.0.1-SNAPSHOT.jar
+
+            # systemdでSpring Bootアプリを再起動
+            sudo systemctl restart onsen.service
+
+            # Nginxをリロード
+            sudo systemctl reload nginx
