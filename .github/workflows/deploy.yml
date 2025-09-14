@@ -23,8 +23,8 @@ jobs:
 
       # 3. バックエンドのビルド
       - name: Build Backend with Maven
-        run: ./mvnw -f backend/pom.xml clean package
-        working-directory: ./tago-f/onsen-review/onsen-review-main
+        run: ./mvnw -f pom.xml clean package -DskipTests
+        working-directory: ./backend
 
       # 4. Node.jsをセットアップ
       - name: Set up Node.js
@@ -37,29 +37,43 @@ jobs:
         run: |
           npm install
           npm run build
-        working-directory: ./tago-f/onsen-review/onsen-review-main/frontend
+        working-directory: ./frontend
 
-      # 6. ビルドしたファイルをサーバーにデプロイ
-      - name: Deploy to Azure VM
+      # 6.フロントエンドのビルド成果物をサーバーに転送
+      - name: SCP Frontend files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "frontend/dist/" # 送信元
+          target: "/tmp/"         # 送信先（一時的な場所）
+          
+      # 7.バックエンドのJARファイルをサーバーに転送
+      - name: SCP Backend JAR to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "backend/target/*.jar"
+          target: "/tmp/"
+          strip_components: 2 # backend/target/ の部分をパスから除去
+
+      # 8.サーバー上でデプロイと再起動を実行
+      - name: Deploy and Restart on Server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 必要なディレクトリが存在しない場合は作成
-            sudo mkdir -p /opt/onsen/dist
-            sudo mkdir -p /opt/onsen/server
-
-            # フロントエンドのファイルを削除してコピー
+            # 古いフロントエンドファイルを削除
             sudo rm -rf /opt/onsen/dist/*
-            sudo cp -r tago-f/onsen-review/onsen-review-main/frontend/dist/* /opt/onsen/dist/
+            # 一時的な場所から正式な場所にファイルを移動
+            sudo mv /tmp/dist/* /opt/onsen/dist/
+            sudo mv /tmp/*.jar /opt/onsen/server/backend-0.0.1-SNAPSHOT.jar
 
-            # バックエンドのJARファイルをコピー
-            sudo cp tago-f/onsen-review/onsen-review-main/backend/target/*.jar /opt/onsen/server/backend-0.0.1-SNAPSHOT.jar
-
-            # systemdでSpring Bootアプリを再起動
+            # アプリケーションを再起動
             sudo systemctl restart onsen.service
-
-            # Nginxをリロード
             sudo systemctl reload nginx
