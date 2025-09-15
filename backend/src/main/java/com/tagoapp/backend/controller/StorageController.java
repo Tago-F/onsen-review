@@ -51,7 +51,7 @@ public class StorageController {
                 containerClient.create();
             }
 
-            // ユニークなファイル名を生成 
+            // ユニークなファイル名を生成
             // ファイル名の衝突を避けるため、UUIDを先頭に付与
             String fileExtension = "";
             int i = originalFileName.lastIndexOf('.');
@@ -62,11 +62,12 @@ public class StorageController {
 
             BlobClient blobClient = containerClient.getBlobClient(uniqueBlobName);
 
-            // SAS (Shared Access Signature) を設定 
+            // SAS (Shared Access Signature) を設定
             // この署名を持つユーザーが、指定された時間だけ特定のアクションを実行できる
             BlobSasPermission blobSasPermission = new BlobSasPermission()
                     .setWritePermission(true) // 書き込み権限
-                    .setCreatePermission(true); // 作成権限
+                    .setCreatePermission(true)
+                    .setDeletePermission(true); // 作成権限
 
             BlobServiceSasSignatureValues sasSignatureValues = new BlobServiceSasSignatureValues(
                     OffsetDateTime.now().plusMinutes(10), // URLの有効期限を10分に設定
