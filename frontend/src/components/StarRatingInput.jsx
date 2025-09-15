@@ -1,4 +1,3 @@
-// frontend/src/components/StarRatingInput.jsx
 
 import { useState } from 'react';
 import { FaStar } from 'react-icons/fa';
