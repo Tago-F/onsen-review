@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import StarRatingInput from "./StarRatingInput.jsx";
 
 /**
- * レビューの新規投稿と編集を担当するフォームコンポーネント
- * @param {object} props
- * @param {object | null} props.initialData - 編集対象のレビューデータ
- * @param {function} props.onFormSubmit - フォーム送信時に呼び出す関数
- * @param {function} props.onCancelEdit - 編集キャンセル時に呼び出す関数
+ * レビューの新規当行と編集を担当するフォーム用コンポーネント<br>
+ * App.jsx から渡される props によって、新規モードと編集モードを切り替え
+ * @param {object} props - コンポーネントのプロパティ
+ * @param {object} [props.initialData=null] - フォームの初期データ、編集モード時に使用
+ * @param {function} props.onFormSubmit - フォーム送信時に呼び出されるコールバック関数
+ * @param {function} [props.onCancelEdit] - 編集モードでキャンセルボタンが押された時に呼び出される関数
  */
 function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
   const [formData, setFormData] = useState({
@@ -20,13 +21,19 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
     service: "",
     meal: "",
   });
+
+  // 選択された画像ファイルを保持する state
   const [imageFile, setImageFile] = useState(null);
+  // フォームが送信処理中かどうかを示すフラグ state
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // フォームのバリデーションエラーメッセージを保持する state
   const [formErrors, setFormErrors] = useState({});
 
-  // initialDataが変更されたらフォームの内容を更新
+  // 新規登録モード、編集モードが切り替わった時にフォームを初期化する useEffect
   useEffect(() => {
+    // 編集モード
     if (initialData) {
+      // フォームのデータを initialData の値で更新
       setFormData({
         name: initialData.name || "",
         rating: initialData.rating || "",
@@ -38,82 +45,97 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
         service: initialData.service || "",
         meal: initialData.meal || "",
       });
-      setImageFile(null); // 編集開始時は画像選択をリセット
+      // 編集モード開始時は画像選択をリセット
+      setImageFile(null);
     } else {
-      // 新規作成時はフォームをリセット
+      // 新規登録モード
       setFormData({
+        // フォームのデータをリセット
         name: "", rating: "", comment: "", visited_date: "",
         quality: "", scenery: "", cleanliness: "", service: "", meal: "",
       });
       setImageFile(null);
     }
+    // モードが切り替わったタイミングでエラーメッセージをリセット
+    setFormErrors({});
   }, [initialData]);
 
   /**
-   * フォームの入力値をハンドルする
+   * input や textarea の入力値が変更されたときに呼ばれるハンドラ関数
+   * @param {*} e - イベントオブジェクト
    */
   const handleChange = (e) => {
+    // イベント発生時の要素の name と value を取得
     const { name, value } = e.target;
+    // 変更があったフィールの値だけを更新
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   /**
-   * 星評価が変更されたときの処理
+   * StarRatingInput コンポーネントで評価が変更されたときに呼ばれるハンドラ関数
+   * @param {*} newRating - 新しい評価値
    */
   const handleRatingChange = (newRating) => {
     setFormData((prev) => ({ ...prev, rating: newRating }));
   };
 
   /**
-   * 画像ファイルが選択されたときの処理
+   * ファイル選択 input で画像ファイルが変更された時の呼ばれるハンドラ関数
+   * @param {*} e - イベントオブジェクト
    */
   const handleImageChange = (e) => {
     setImageFile(e.target.files[0] || null);
   };
 
   /**
-   * フォームの送信処理
+   * フォームの送信ボタンが押されたときに呼ばれるハンドラ関数
+   * @param {*} e - イベントオブジェクト
+   * @returns 
    */
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (isSubmitting) return;
+  const handleSubmit = async (e) => {
 
-    // 入力の空白チェック
-    if (!formData.rating) {
-      errors.rating = "評価を選択してください。";
-    }
+    // フォーム送信によるページのリロードを防止
+    e.preventDefault();
+
+    // バリデーションチェック
+    const errors = {};
     if (!formData.name) {
       errors.name = "場所の名前を入力してください。";
     }
+    if (!formData.rating) {
+      errors.rating = "評価を選択してください。";
+    }
+
+    // エラーメッセージを state セット
     setFormErrors(errors);
 
+    // エラーメッセージがある場合、処理を中断
     if (Object.keys(errors).length > 0) {
       return;
     }
 
+    // 送信処理中の場合は処理を中断（二重送信を防止）
+    if (isSubmitting) return;
+
+    // 送信中フラグを更新
     setIsSubmitting(true);
 
-    // 数値に変換するフィールド
     const numericFields = ['rating', 'quality', 'scenery', 'cleanliness', 'service', 'meal'];
     const processedData = { ...formData };
     numericFields.forEach(field => {
       processedData[field] = processedData[field] ? parseFloat(processedData[field]) : null;
     });
 
-    // 親コンポーネントにデータとファイルを渡す
     await onFormSubmit(processedData, imageFile);
 
-    // 新規投稿の場合、フォームをリセット
     if (!initialData) {
       setFormData({
         name: "", rating: "", comment: "", visited_date: "",
         quality: "", scenery: "", cleanliness: "", service: "", meal: "",
       });
       setImageFile(null);
-      // input[type=file]の表示をリセットするためにフォーム自体をリセット
-      event.target.reset();
+      e.target.reset();
     }
-
     setIsSubmitting(false);
   };
 
@@ -123,11 +145,15 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
         {initialData ? "レビューを編集" : "新しいレビューを投稿"}
       </h2>
 
-      {/* --- 基本情報 --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-gray-700 text-sm font-bold mb-2">場所の名前：</label>
-          <input type="text" name="name" value={formData.name} onChange={handleChange} required className="shadow appearance-none border rounded w-full py-2 px-3" />
+
+          <input type="text" name="name" value={formData.name} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3" />
+
+          {formErrors.name && (
+            <p className="text-red-500 text-xs italic mt-1">{formErrors.name}</p>
+          )}
         </div>
         <div>
           <label className="block text-gray-700 text-sm font-bold mb-2">評価：</label>
@@ -140,6 +166,7 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
           )}
         </div>
       </div>
+
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">コメント：</label>
         <textarea name="comment" value={formData.comment} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 h-24" />
@@ -149,7 +176,6 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
         <input type="date" name="visited_date" value={formData.visited_date} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3" />
       </div>
 
-      {/* --- 詳細評価 --- */}
       <h3 className="text-lg font-bold mt-6 mb-2 text-gray-700">詳細評価</h3>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
         <div>
@@ -174,13 +200,11 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
         </div>
       </div>
 
-      {/* --- 画像アップロード --- */}
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">温泉の写真：</label>
         <input type="file" accept="image/*" onChange={handleImageChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
       </div>
 
-      {/* --- 送信ボタン --- */}
       <div className="flex items-center gap-x-4">
         <button type="submit" disabled={isSubmitting} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:bg-blue-300">
           {isSubmitting ? '送信中...' : (initialData ? "更新" : "登録")}
