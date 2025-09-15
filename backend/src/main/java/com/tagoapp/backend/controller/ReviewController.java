@@ -1,6 +1,8 @@
 package com.tagoapp.backend.controller;
 
+import java.net.URL;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -15,8 +17,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.azure.storage.blob.sas.BlobSasPermission;
 import com.tagoapp.backend.entity.Review;
 import com.tagoapp.backend.repository.ReviewRepository;
+import com.tagoapp.backend.service.StorageService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class ReviewController {
 
     private final ReviewRepository reviewRepository;
+    private final StorageService storageService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -36,7 +41,31 @@ public class ReviewController {
 
     @GetMapping
     public List<Review> getAllReviews() {
-        return reviewRepository.findAll();
+        List<Review> reviews = reviewRepository.findAll();
+
+        // 各レビューの画像URLにSASトークンを付与する
+        return reviews.stream().map(review -> {
+            if (review.getImageUrl() != null && !review.getImageUrl().isEmpty()) {
+                try {
+                    // URLからファイル名（Blob名）を抽出
+                    URL url = new URL(review.getImageUrl());
+                    String path = url.getPath();
+                    String blobName = path.substring(path.lastIndexOf('/') + 1);
+
+                    // 読み取り専用(r)のSASトークンを生成（有効期限1時間）
+                    BlobSasPermission permission = new BlobSasPermission().setReadPermission(true);
+                    String sasToken = storageService.generateSasToken(blobName, permission, 60);
+
+                    // 元のURLにSASトークンを結合
+                    review.setImageUrl(review.getImageUrl() + "?" + sasToken);
+
+                } catch (Exception e) {
+                    // URLのパースに失敗した場合は、URLをそのままにするか、エラーとして扱う
+                    e.printStackTrace();
+                }
+            }
+            return review;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
