@@ -23,7 +23,7 @@ const StarDisplay = ({ rating }) => (
  */
 function ReviewCard({ review, onEdit, onDelete }) {
   return (
-    <li className="bg-white shadow-md rounded-lg p-6 flex flex-col justify-between">
+    <li className="bg-white/70 backdrop-blur-md shadow-xl rounded-lg p-6 flex flex-col justify-between border border-white/20">
       <div>
         <h3 className="text-xl font-bold text-gray-800 mb-2">{review.name}</h3>
         <StarDisplay rating={review.rating} />
@@ -39,7 +39,6 @@ function ReviewCard({ review, onEdit, onDelete }) {
           </div>
         )}
 
-        {/* 詳細評価がある場合のみレーダーチャートを表示 */}
         {review.quality != null ? (
           <div className="w-full h-64 mb-4">
             <RadarChart reviewData={review} />

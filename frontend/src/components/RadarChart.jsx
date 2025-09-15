@@ -56,6 +56,7 @@ function RadarChart({ reviewData }) {
         // 目盛りの設定
         ticks: {
           stepSize: 1, // 1刻みで表示
+          backdropColor: 'transparent',
         },
         // 軸の見た目
         pointLabels: {

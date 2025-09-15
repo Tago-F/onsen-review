@@ -140,7 +140,7 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-8 mb-6">
+    <form onSubmit={handleSubmit} className="bg-white/70 backdrop-blur-md shadow-xl rounded-lg p-8 mb-6 border border-white/20">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
         {initialData ? "レビューを編集" : "新しいレビューを投稿"}
       </h2>
@@ -148,9 +148,7 @@ function ReviewForm({ initialData, onFormSubmit, onCancelEdit }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-gray-700 text-sm font-bold mb-2">場所の名前：</label>
-
-          <input type="text" name="name" value={formData.name} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3" />
-
+          <input type="text" name="name" value={formData.name} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" />
           {formErrors.name && (
             <p className="text-red-500 text-xs italic mt-1">{formErrors.name}</p>
           )}
